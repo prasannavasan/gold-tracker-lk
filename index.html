@@ -318,6 +318,33 @@
       margin: 16px 0;
     }
 
+    /* ── Auto-update banner ── */
+    .autoupdate-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 14px;
+      font-size: 11px;
+      color: var(--text-dim);
+      background: rgba(80, 216, 144, 0.06);
+      border: 1px solid rgba(80, 216, 144, 0.18);
+      border-radius: 20px;
+      padding: 5px 13px 5px 10px;
+    }
+
+    .au-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--live);
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    .au-sep { color: var(--text-faint); margin: 0 1px; }
+
+    #au-countdown { color: var(--live); }
+
     /* ── Responsive ── */
     @media (max-width: 500px) {
       header, main, footer { padding-left: 16px; padding-right: 16px; }
@@ -333,6 +360,12 @@
   <p class="header-kicker">Sri Lanka · 22 Karat</p>
   <h1>Gold Price Tracker <span>· LKR</span></h1>
   <p class="header-sub">Last 13 months — May 2025 to May 2026 &nbsp;·&nbsp; Updated May 22, 2026</p>
+  <div class="autoupdate-bar">
+    <span class="au-dot"></span>
+    Auto-updated daily at 9:00 AM Sri Lanka time
+    <span class="au-sep">·</span>
+    <span id="au-countdown">calculating&hellip;</span>
+  </div>
 </header>
 
 <main>
@@ -575,9 +608,27 @@
     drawChart();
   }
 
+  // Auto-update countdown (Sri Lanka = UTC+5:30)
+  function updateCountdown() {
+    const now = new Date();
+    const slMs = now.getTime() + now.getTimezoneOffset() * 60000 + (5 * 60 + 30) * 60000;
+    const slNow = new Date(slMs);
+    const next = new Date(slNow);
+    next.setHours(9, 0, 0, 0);
+    if (slNow.getHours() >= 9) next.setDate(next.getDate() + 1);
+    const diff = next - slNow;
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const el = document.getElementById('au-countdown');
+    if (!el) return;
+    el.textContent = diff < 600000 ? 'updating soon' : `next update in ${h}h ${m}m`;
+  }
+
   // Init
   buildTable();
   drawChart();
+  updateCountdown();
+  setInterval(updateCountdown, 60000);
   window.addEventListener('resize', drawChart);
 </script>
 </body>
