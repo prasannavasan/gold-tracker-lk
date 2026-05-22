@@ -1,0 +1,36 @@
+name: Update 22K Gold Price
+
+on:
+  schedule:
+    - cron: '30 3 * * *'   # 09:00 Sri Lanka time (UTC+5:30)
+  workflow_dispatch:         # Allow manual trigger from GitHub UI
+
+jobs:
+  update-price:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # Needed to push the updated index.html
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch price and update index.html
+        run: python scripts/update_price.py
+
+      - name: Commit and push if price changed
+        run: |
+          git config user.name  "gold-price-bot"
+          git config user.email "actions@github.com"
+          if git diff --quiet; then
+            echo "No change in price — nothing to commit"
+          else
+            git add index.html
+            git commit -m "price: 22K gold update $(date -u '+%Y-%m-%d')"
+            git push
+          fi
